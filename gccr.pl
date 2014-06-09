@@ -4,7 +4,7 @@
 #
 # Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
 # 2003, 2004, 2005  Free Software Foundation, Inc.
-# This Makefile.in is free software; the Free Software Foundation
+# This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
 #
@@ -14,6 +14,8 @@
 # PARTICULAR PURPOSE.
 #
 
+# version 0.4.17 : eel3 : fixed error occur when print the line matched /%[^%]/g
+# version 0.4.16 : eel3 : fixed parse error occur in line 10000 or later
 # version 0.4.15 : eel3 : avoided warnings caused by uninitialized variable
 # version 0.4.14 : eel3 : fixed line number indent size for over 99999 line
 # version 0.4.13 : eel3 : changed warning option
@@ -21,7 +23,7 @@
 # version 0.4.11 : Nick Groesz : fix potential divide by zero
 # version 0.4.10 : Nick Groesz : fixed summary in combined coverage, ignore function data, added copyright
 # version 0.4.9 : Nick Groesz : added combined reporting in print_summary(), changed usage text
-# version 0.4.8	: Nick Groesz : added -c option (combined coverage)
+# version 0.4.8 : Nick Groesz : added -c option (combined coverage)
 # version 0.4.7 : Nick Groesz : fixed formatting, added comments
 # version 0.4.6 : Dickson Patton : fixed tagfile option, right justify counts
 # version 0.4.5 : Nick Groesz : list code generated with #define macros
@@ -41,7 +43,7 @@ sub print_summary();		# print summary (similary to gcov's summary)
 sub print_usage();		# print gccr usage text
 
 our $tool_name = 'gccr';			# name of script
-our $version = 'gccr (GCC) 0.4.15';		# version of script
+our $version = 'gccr (GCC) 0.4.17';		# version of script
 our $copyright = 'Copyright (C) 2005 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -223,7 +225,7 @@ sub parse_execution_data($$)
 		
 		chomp $line;
 		
-		if($line =~ /^\s+-:\s+(\d+):(.*)/) {
+		if($line =~ /^\s+-:\s*(\d+):(.*)/) {
 			
 			# line is gcov preamble or non-executing code
 			
@@ -236,7 +238,7 @@ sub parse_execution_data($$)
 			if($save_raw) {
 				$data{'line'}[$file_line_num]{'raw'} = $2;
 			}
-		}elsif($line =~ /^\s+#####:\s+(\d+):(.*)/) {
+		}elsif($line =~ /^\s+#####:\s*(\d+):(.*)/) {
 			
 			# line was not executed
 			
@@ -251,7 +253,7 @@ sub parse_execution_data($$)
 				$data{'line'}[$file_line_num]{'raw'} = $raw;
 
 			}
-		}elsif($line =~ /^\s+(\d+):\s+(\d+):(.*)/) {
+		}elsif($line =~ /^\s+(\d+):\s*(\d+):(.*)/) {
 			
 			# line was executed  
 			
@@ -355,7 +357,7 @@ sub print_results()
 				# non-executing code
 				
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab-:$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab-:$p_op:%s\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
 					$raw_printed = 1;
 				}
 				
@@ -372,7 +374,7 @@ sub print_results()
 				}
 			
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab  $p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab  $p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
 					$raw_printed = 1;
 				}
 			
@@ -442,19 +444,19 @@ sub print_results()
 				if($never_exec) {
 					# code line is not executable in any file
 					
-					printf("$ftab-:$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab-:$p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
 				}else {
 					
 					# line is executable in at least one file
 					
 					if($count_sum == 0) {
-						print '     ####';
+						print '    #####';
 					}else {
 						my $padding = 9;
 						$padding -= length($count_sum);
 						printf("%*s%d",$padding,' ',$count_sum);
 					}
-					printf(":$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});
+					printf(":$p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});
 				}
 			}elsif($type eq 'branch') {
 				# branch information
