@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 
 #
@@ -14,6 +14,7 @@
 # PARTICULAR PURPOSE.
 #
 
+# version 0.4.13 : eel3 : changed warning option
 # version 0.4.12 : eel3 : fixed problem that extra tab is output, and changed line number to be right-aligned
 # version 0.4.11 : Nick Groesz : fix potential divide by zero
 # version 0.4.10 : Nick Groesz : fixed summary in combined coverage, ignore function data, added copyright
@@ -26,6 +27,7 @@
 # version 0.4.3 : Nick Groesz : changed around internal data structures, start of version history
 
 use strict;
+use warnings;
 use Getopt::Long;
 
 # prototypes
@@ -37,7 +39,7 @@ sub print_summary();		# print summary (similary to gcov's summary)
 sub print_usage();		# print gccr usage text
 
 our $tool_name = 'gccr';			# name of script
-our $version = 'gccr (GCC) 0.4.12';		# version of script
+our $version = 'gccr (GCC) 0.4.13';		# version of script
 our $copyright = 'Copyright (C) 2005 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
