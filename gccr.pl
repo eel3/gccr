@@ -14,6 +14,7 @@
 # PARTICULAR PURPOSE.
 #
 
+# version 0.4.14 : eel3 : fixed line number indent size for over 99999 line
 # version 0.4.13 : eel3 : changed warning option
 # version 0.4.12 : eel3 : fixed problem that extra tab is output, and changed line number to be right-aligned
 # version 0.4.11 : Nick Groesz : fix potential divide by zero
@@ -39,7 +40,7 @@ sub print_summary();		# print summary (similary to gcov's summary)
 sub print_usage();		# print gccr usage text
 
 our $tool_name = 'gccr';			# name of script
-our $version = 'gccr (GCC) 0.4.13';		# version of script
+our $version = 'gccr (GCC) 0.4.14';		# version of script
 our $copyright = 'Copyright (C) 2005 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -325,6 +326,7 @@ sub parse_execution_data($$)
 sub print_results()
 {	
 	my $ftab = '        ';
+	my $p_op = ($line_count <= 99999) ? '%5d' : '%13d';
 
 	for(my $line_i=1;$line_i<=$line_count;$line_i++) {
 		
@@ -351,7 +353,7 @@ sub print_results()
 				# non-executing code
 				
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab-:%5d:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab-:$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'});	
 					$raw_printed = 1;
 				}
 				
@@ -368,7 +370,7 @@ sub print_results()
 				}
 			
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab  %5d:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab  $p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
 					$raw_printed = 1;
 				}
 			
@@ -394,7 +396,7 @@ sub print_results()
 						$padding -= length($count);
 						printf("%*s%d",$padding,' ',$count);
 					}
-					printf(':%5d: ', $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'});
+					printf(":$p_op: ", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'});
 					print "$files[$file_i]{'tag'}\n";
 				}
 			}elsif($type eq 'branch') {
@@ -437,7 +439,7 @@ sub print_results()
 				if($never_exec) {
 					# code line is not executable in any file
 					
-					printf("$ftab-:%5d:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
+					printf("$ftab-:$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});	
 				}else {
 					
 					# line is executable in at least one file
@@ -449,7 +451,7 @@ sub print_results()
 						$padding -= length($count_sum);
 						printf("%*s%d",$padding,' ',$count_sum);
 					}
-					printf(":%5d:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});
+					printf(":$p_op:$files[0]{'data'}{'line'}[$line_i]{'raw'}\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'});
 				}
 			}elsif($type eq 'branch') {
 				# branch information
