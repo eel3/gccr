@@ -14,6 +14,7 @@
 # PARTICULAR PURPOSE.
 #
 
+# version 0.4.15 : eel3 : avoided warnings caused by uninitialized variable
 # version 0.4.14 : eel3 : fixed line number indent size for over 99999 line
 # version 0.4.13 : eel3 : changed warning option
 # version 0.4.12 : eel3 : fixed problem that extra tab is output, and changed line number to be right-aligned
@@ -40,7 +41,7 @@ sub print_summary();		# print summary (similary to gcov's summary)
 sub print_usage();		# print gccr usage text
 
 our $tool_name = 'gccr';			# name of script
-our $version = 'gccr (GCC) 0.4.14';		# version of script
+our $version = 'gccr (GCC) 0.4.15';		# version of script
 our $copyright = 'Copyright (C) 2005 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -349,6 +350,7 @@ sub print_results()
 			
 			my $type = $files[$file_i]{'data'}{'line'}[$line_i]{'type'};
 			
+			no warnings 'uninitialized';    # XXX: remove warining for $type
 			if($type eq 'no_ex') {
 				# non-executing code
 				
@@ -433,6 +435,7 @@ sub print_results()
 			
 			my $type = $files[0]{'data'}{'line'}[$line_i]{'type'};
 	
+			no warnings 'uninitialized';    # XXX: remove warining for $type
 			if($type eq 'no_ex' || $type eq 'code') {
 				# line is either non-executable or executable code 
 				
