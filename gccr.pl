@@ -1,5 +1,6 @@
-#!/usr/bin/perl
-
+#!/usr/bin/env perl
+# -*- coding: utf-8; tab-width: 8 -*-
+# vim: fileencoding=UTF-8 shiftwidth=8 softtabstop=8 tabstop=8
 
 #
 # Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
@@ -14,6 +15,7 @@
 # PARTICULAR PURPOSE.
 #
 
+# version 0.4.18 : eel3 : changed shebang, fixed indent, specified emacs/vim coding system.
 # version 0.4.17 : eel3 : fixed error occur when print the line matched /%[^%]/g
 # version 0.4.16 : eel3 : fixed parse error occur in line 10000 or later
 # version 0.4.15 : eel3 : avoided warnings caused by uninitialized variable
@@ -43,12 +45,11 @@ sub print_summary();		# print summary (similary to gcov's summary)
 sub print_usage();		# print gccr usage text
 
 our $tool_name = 'gccr';			# name of script
-our $version = 'gccr (GCC) 0.4.17';		# version of script
+our $version = 'gccr (GCC) 0.4.18';		# version of script
 our $copyright = 'Copyright (C) 2005 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ';						# copyright notice
-
 
 # internal data
 our @files;			# gcov file data
@@ -58,26 +59,26 @@ our @files;			# gcov file data
 				# $file[file_number]{'tag'} - user specified file tag
 				# $file[file_number]{'name'} - name of file to be read and parsed
 				#
-				# $file[file_number[{'data'} contains parsed gcov data 
-				# 
+				# $file[file_number[{'data'} contains parsed gcov data
+				#
 				# Line information:
 				# line_number - corresponds to the line number of the GCOV file
 				# 		and ranges from 1 to NUMBER OF LINES
-				# $data{'line'}[line_number]{'type'} - type of line 
+				# $data{'line'}[line_number]{'type'} - type of line
 				#				       Can be set to:
-				#						no_ex -  non-executing code (gcov meta-data, header code, code that has been #ifdef'd out) 
+				#						no_ex -  non-executing code (gcov meta-data, header code, code that has been #ifdef'd out)
 				#						line - 	 an executable line of code
 				#						branch - branch execution information
 				#						call -   call execution information
 				#
 				# $data{'line'}[line_number]{'count'} -    number of times an executable line, branch, or call was executed
-				# $data{'line'}[line_number]{'raw'} -      raw data straight from gcov file 
-				#				           this is only populated in the first file's data structure 
+				# $data{'line'}[line_number]{'raw'} -      raw data straight from gcov file
+				#				           this is only populated in the first file's data structure
 				# $data{'line'}[line_number]{'line_num'} - line number in original source code
 				# Execution information:
-				# $data{'line_count'} - 	number of executable lines 
+				# $data{'line_count'} - 	number of executable lines
 				# $data{'execution_count'} -	number of executed lines
-				
+
 our $file_count = 0;		# number of files read
 our $line_count = 0;		# number of lines in gcov data files (should be the same for each file)
 our $executable_total = 0;	# number of different executable lines across all files
@@ -86,8 +87,8 @@ our $executed_total = 0;	# number of different executable lines across all files
 # options
 our $opt_combined = 0;
 our $opt_help = 0;		# help option
-our $opt_version = 0; 		# version option
-our @tag_files = (); 		# tagfile(s) option 
+our $opt_version = 0;		# version option
+our @tag_files = ();		# tagfile(s) option
 our $opt_nosummary = 0;		# do not print summary
 
 read_args();
@@ -102,33 +103,32 @@ unless($opt_nosummary) {
 # Return: 	none
 sub read_args()
 {
-
 	unless( GetOptions(
 		'combined' => \$opt_combined,
 		'help' => \$opt_help,
-           	'no-summary' => \$opt_nosummary,
-	        'tagfile|file=s' => \@tag_files,
+		'no-summary' => \$opt_nosummary,
+		'tagfile|file=s' => \@tag_files,
 		'version' => \$opt_version,
 			  )
 	      ) {
-	      	
+
 		# if GetOptions returns FALSE, then incorrect options were specified
 		# exit with error
 		print_usage();
 		exit(1);
 	}
-	
+
 	if($opt_help) {
 		print_usage();
 		exit(0);
 	}
-	
+
 	if($opt_version) {
 		print "$version\n";
 		print "$copyright\n";
 		exit(0);
 	}
-	
+
 	# if any number of tag files were specified, then we read tagfiles instead of command line arugments
 	if(scalar(@tag_files)) {
 		@files = &read_tagfiles(@tag_files);
@@ -143,9 +143,8 @@ sub read_args()
 			push @files, {name => $ARGV[$i], tag => $ARGV[$i+1]};
 			$i+=2;
 		}
-
 	}
-	
+
 	$file_count = scalar(@files);
 	if($file_count < 2 ) {
 		print("ERROR: at least two files must be specified\n");
@@ -155,7 +154,7 @@ sub read_args()
 
 # Summary: 	read tagfiles specifie dwith the -t option
 # Parameters: 	array of names of tagfiles
-# Return: 	array of name/tag hashes 
+# Return: 	array of name/tag hashes
 sub read_tagfiles($)
 {
 	my @tag_files = @_;
@@ -164,32 +163,31 @@ sub read_tagfiles($)
  	my $m = 0;				# count of line in the current tagfile
 
 	foreach my $file(@tag_files) {
-        	$l++;
+		$l++;
 		open(TAGFILE, $file) || die "ERROR: on open of tagfile $l, $file: ($!)\n";
-        	while(<TAGFILE>) {
-        		$m++;
-        		chomp $_;
-        		if ( /(^([^ ]+) *(.*)$)/ ) {
-					push @files, {name => $2, tag => $3};
-        		}
-        		else {
-        			die "ERROR: invalid file-tag pair on line $m of tagfile $l\n";
-        		}
-        	}
+		while(<TAGFILE>) {
+			$m++;
+			chomp $_;
+			if ( /(^([^ ]+) *(.*)$)/ ) {
+				push @files, {name => $2, tag => $3};
+			}
+			else {
+				die "ERROR: invalid file-tag pair on line $m of tagfile $l\n";
+			}
+		}
 		close(TAGFILE);
 	}
 	return(@files);
 }
 
-# Summary: 	run through all the gcov files and call the parsing function	
+# Summary: 	run through all the gcov files and call the parsing function
 # Parameters: 	none
 # Return: 	none
 sub process_files()
 {
-	
 	# the first file is used to gather raw data
 	$files[0]{'data'} = parse_execution_data($files[0]{'name'},1);
-	
+
 	for(my $i=1;$i<$file_count;$i++) {
 		$files[$i]{'data'} = parse_execution_data($files[$i]{'name'},0);
 	}
@@ -198,40 +196,38 @@ sub process_files()
 # Summary: 	parse the gcov file, populating the %data structure
 # Parameters: 	name of file to parse | boolean indicating whether raw (original gcov) data should be saved
 # 		save_raw is set to 1 on the first file parse and set to zero thereafter
-# Returns: 	reference to data hash 
+# Returns: 	reference to data hash
 sub parse_execution_data($$)
 {
-
-
 	my($file,$save_raw) = @_;
 	my %data;
 
-	$data{'line_count'} = 0; 		# number of executable lines in file
-	$data{'execution_count'} = 0; 		# number of lines that were executed in file
-	
+	$data{'line_count'} = 0;		# number of executable lines in file
+	$data{'execution_count'} = 0;		# number of lines that were executed in file
+
 	stat($file);
-        if(!(-r _)) {
-                die("ERROR: cannot read file: $file\n");
-        }
+	if(!(-r _)) {
+		die("ERROR: cannot read file: $file\n");
+	}
 	if(!(-f _)) {
-                die("ERROR: not a plain file: $file\n");
-        }	
-	open(FILE_HANDLE,$file) || die("ERROR: cannot open file $file: $!");	
-	
+		die("ERROR: not a plain file: $file\n");
+	}
+	open(FILE_HANDLE,$file) || die("ERROR: cannot open file $file: $!");
+
 	my $file_line_num = 0;
 	while(<FILE_HANDLE>) {
 		my $line = $_;
 		$file_line_num++;
-		
+
 		chomp $line;
-		
+
 		if($line =~ /^\s+-:\s*(\d+):(.*)/) {
-			
+
 			# line is gcov preamble or non-executing code
-			
+
 			my $line_num = $1;
 			my $raw = $2;
-			
+
 			$data{'line'}[$file_line_num]{'type'} = 'no_ex';
 			$data{'line'}[$file_line_num]{'line_num'} = $line_num;
 
@@ -239,28 +235,27 @@ sub parse_execution_data($$)
 				$data{'line'}[$file_line_num]{'raw'} = $2;
 			}
 		}elsif($line =~ /^\s+#####:\s*(\d+):(.*)/) {
-			
+
 			# line was not executed
-			
+
 			my $line_num = $1;
 			my $raw = $2;
-			
+
 			$data{'line'}[$file_line_num]{'count'} = 0;
 			$data{'line'}[$file_line_num]{'type'} = 'code';
 			$data{'line'}[$file_line_num]{'line_num'} = $line_num;
 			$data{'line_count'}++;
 			if($save_raw) {
 				$data{'line'}[$file_line_num]{'raw'} = $raw;
-
 			}
 		}elsif($line =~ /^\s+(\d+):\s*(\d+):(.*)/) {
-			
-			# line was executed  
-			
+
+			# line was executed
+
 			my $count = $1;
 			my $line_num = $2;
 			my $raw = $3;
-			
+
 			$data{'line'}[$file_line_num]{'count'} = $count;
 			$data{'line'}[$file_line_num]{'type'} = 'code';
 			$data{'line'}[$file_line_num]{'line_num'} = $line_num;
@@ -270,9 +265,9 @@ sub parse_execution_data($$)
 				$data{'line'}[$file_line_num]{'raw'} = $raw;
 			}
 		}elsif($line =~ /^branch\s+(\d+)/) {
-			
+
 			# line contains branch execution information
-			
+
 			my $branch_num = $1;
 			$data{'line'}[$file_line_num]{'num'} = $branch_num;
 
@@ -287,9 +282,9 @@ sub parse_execution_data($$)
 				$data{'line'}[$file_line_num]{'raw'} = $line;
 			}
 		}elsif($line =~ /^call\s+(\d+)/) {
-		
+
 			# line contains call execution information
-			
+
 			my $call_num = $1;
 			$data{'line'}[$file_line_num]{'num'} = $call_num;
 
@@ -302,19 +297,18 @@ sub parse_execution_data($$)
 			}
 			if($save_raw) {
 				$data{'line'}[$file_line_num]{'raw'} = $line;
-
 			}
 		}elsif($line =~ /^function/i) {
 			# function data is ignored
 		}else {
 			# line could not be parsed
-			
+
 			print("ERROR: cannot parse line $file_line_num in file $file\n Is this a valid gcov file?\n");
 			exit(1);
 		}
 	}
 	close(FILE_HANDLE);
-	
+
 	# check to see if we should save an overall line count (common to all gcov files)
 	if($save_raw) {
 		$line_count = $file_line_num;
@@ -327,40 +321,40 @@ sub parse_execution_data($$)
 # Parameters: 	none
 # Return: 	none
 sub print_results()
-{	
+{
 	my $ftab = '        ';
 	my $p_op = ($line_count <= 99999) ? '%5d' : '%13d';
 
 	for(my $line_i=1;$line_i<=$line_count;$line_i++) {
-		
-			
-		my $raw_printed = 0;	 	  # boolean flag to print out the line slurped in from the gcov file
-		
-		my $count_sum = 0;	 	  # sum of executions across all files for this one line- used for combined coverage reporting
-		
-		my $never_exec = 1;	 	  # boolean flag that is set to 0 when the current line is executed or executable 
+
+		my $raw_printed = 0;		  # boolean flag to print out the line slurped in from the gcov file
+
+		my $count_sum = 0;		  # sum of executions across all files for this one line- used for combined coverage reporting
+
+		my $never_exec = 1;		  # boolean flag that is set to 0 when the current line is executed or executable
+
 						  # in any file. used in combined coverage reporting.
-		
+
 		my $first_code_line_executed = 0; # boolean flag that indicates whether this is the first unique
-					 	  # executed line of code to be found among the gcov files
-		
+						  # executed line of code to be found among the gcov files
+
 		for(my $file_i=0;$file_i<$file_count;$file_i++) {
-			# Note that each file is cycled through for every line even if just the raw 
+			# Note that each file is cycled through for every line even if just the raw
 			# data from the first file that ends up being printed. This is because the same
 			# line may be non-executing in one file and executable in another file (because code
 			# may be ifdef'd out).
-			
+
 			my $type = $files[$file_i]{'data'}{'line'}[$line_i]{'type'};
-			
+
 			no warnings 'uninitialized';    # XXX: remove warining for $type
 			if($type eq 'no_ex') {
 				# non-executing code
-				
+
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab-:$p_op:%s\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
+					printf("$ftab-:$p_op:%s\n", $files[$file_i]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});
 					$raw_printed = 1;
 				}
-				
+
 				# nothing additional is printed for non-executing code
 			}elsif($type eq 'code') {
 				# code that is executable
@@ -368,16 +362,16 @@ sub print_results()
 					# this code is exectuable, so we indicate that in the never_exec flag
 					$never_exec = 0;
 					# we only want the number of UNIQUE lines across files that are executable
-					# in the executable_total flag, so this is only incremented once for all 
+					# in the executable_total flag, so this is only incremented once for all
 					# identical lines across each file
-					$executable_total++;					
+					$executable_total++;
 				}
-			
+
 				unless($raw_printed || $opt_combined) {
-					printf("$ftab  $p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
+					printf("$ftab  $p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});
 					$raw_printed = 1;
 				}
-			
+
 				my $count = $files[$file_i]{'data'}{'line'}[$line_i]{'count'};
 				if($opt_combined) {
 					$count_sum += $count;
@@ -418,7 +412,7 @@ sub print_results()
 			}elsif($type eq 'call') {
 				# call information
 				my $count = $files[$file_i]{'data'}{'line'}[$line_i]{'count'};
-	
+
 				if($opt_combined) {
 					$count_sum += $count;
 				}else {
@@ -430,25 +424,25 @@ sub print_results()
 				}
 			}
 		}
-		
+
 		if($opt_combined) {
 			# if the combined coverage flag is set then no information is printed in the above for loop
 			# count information is summed into $count_sum and printed on a single line
-			
+
 			my $type = $files[0]{'data'}{'line'}[$line_i]{'type'};
-	
+
 			no warnings 'uninitialized';    # XXX: remove warining for $type
 			if($type eq 'no_ex' || $type eq 'code') {
-				# line is either non-executable or executable code 
-				
+				# line is either non-executable or executable code
+
 				if($never_exec) {
 					# code line is not executable in any file
-					
-					printf("$ftab-:$p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});	
+
+					printf("$ftab-:$p_op:%s\n", $files[0]{'data'}{'line'}[$line_i]{'line_num'}, $files[0]{'data'}{'line'}[$line_i]{'raw'});
 				}else {
-					
+
 					# line is executable in at least one file
-					
+
 					if($count_sum == 0) {
 						print '    #####';
 					}else {
@@ -468,7 +462,7 @@ sub print_results()
 				}
 			}elsif($type eq 'call') {
 				# call information
-				
+
 				if($count_sum == 0) {
 					print "call $files[0]{'data'}{'line'}[$line_i]{'num'} never executed\n";
 				}else {
@@ -476,18 +470,18 @@ sub print_results()
 					print "call $files[0]{'data'}{'line'}[$line_i]{'num'} returns $percentage%\n";
 				}
 			}
-		}	
+		}
 	}
 }
 
 # Summary: 	prints the line execution percentages for each file and a percentage for all files combined
 # Parameters: 	none
 # Return: 	none
-sub print_summary() 
+sub print_summary()
 {
 	for(my $file_i=0;$file_i<$file_count;$file_i++) {
 		my $file_line_count = $files[$file_i]{'data'}{'line_count'};
-		my $percentage;	
+		my $percentage;
 		if($file_line_count) {
 			$percentage = ($files[$file_i]{'data'}{'execution_count'} / $file_line_count) * 100;
 		}else {
@@ -504,15 +498,13 @@ sub print_summary()
 	}
 	$overall_percentage = sprintf('%.2f',$overall_percentage);
 	print "$overall_percentage% of $executable_total lines executed across all files\n";
-	
 }
 
 # Summary: 	print tool usage information
 # Parameters: 	none
 # Return: 	none
-sub print_usage() 
+sub print_usage()
 {
-
 	print <<END_USAGE;
 Usage: ./$tool_name [options] <file name> <target id> <file name> <target id> [file name] [target id]...
 
@@ -527,4 +519,4 @@ Ouput Options:
   -c, --combined		  Print combined coverage
   -n, --no-summmary		  Do not print summary
 END_USAGE
-}	
+}
